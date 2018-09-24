@@ -3,7 +3,7 @@ var sdk = require("matrix-js-sdk");
 var db = require('./db.js');
 
 var client;
-function start() {
+function start(callback) {
     client = sdk.createClient({
         baseUrl: "https://matrix.org",
         accessToken: config.access_token,
@@ -22,6 +22,7 @@ function start() {
     client.once('sync', function(state, prevState, res) {
         //console.log(res);
         if(state === 'PREPARED') {
+            callback();
             console.log("prepared");
             setupListeners();
             trySaveAll();

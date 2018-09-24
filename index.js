@@ -1,8 +1,9 @@
-var bot = require('./bot.js');
+const bot = require('./bot.js');
 const argv = require('yargs').argv
 
-bot.start();
+bot.start(() => {
+    console.log("sync complete");
+    if (argv.w) {
 
-if (argv.w) {
-    
-}
+    }
+});
