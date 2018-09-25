@@ -27,4 +27,71 @@ function saveEvent(event) {
     });
 }
 
+function saveRoom(room) {
+    if (room.topic) {
+        room.topic = room.topic.replace(/\'/g, "''");
+    } else {
+        room.name = '';
+    }
+    if (room.name) {
+        room.name = room.name.replace(/\'/g, "''");
+    } else {
+        room.name = '';
+    }
+    var insertSql = `INSERT OR IGNORE INTO rooms(room_id, name, canonical_alias, guest_can_join, world_readable, num_joined_members, topic)
+    VALUES (
+        '${room.room_id}',
+        '${room.name.replace(/\'/g, "''")}',
+        '${room.canonical_alias}',
+        ${room.guest_can_join},
+        ${room.world_readable},
+        ${room.num_joined_members},
+        '${room.topic}'
+    )`;
+
+    db.run(insertSql, function(err) {
+        if (err) {
+            console.log(err);
+            console.log(insertSql);
+            return;
+        }
+    });
+}
+
+function saveAlias(room_id, alias) {
+    var insertSql = `INSERT OR IGNORE INTO room_alias(room_id, alias)
+    VALUES (
+        '${room_id}',
+        '${alias}'
+    )`;
+
+    db.run(insertSql, function(err) {
+        if (err) {
+            console.log(err);
+            console.log(insertSql);
+            return;
+        }
+    });
+}
+
+function saveMember(room_id, member) {
+    var insertSql = `INSERT OR IGNORE INTO membership(room_id, user_id, power_level)
+    VALUES (
+        '${room_id}',
+        '${member.userId}',
+        ${member.powerLevel}
+    )`;
+
+    db.run(insertSql, function(err) {
+        if (err) {
+            console.log(err);
+            console.log(insertSql);
+            return;
+        }
+    });
+}
+
 module.exports.saveEvent = saveEvent;
+module.exports.saveRoom = saveRoom;
+module.exports.saveAlias = saveAlias;
+module.exports.saveMember = saveMember;
