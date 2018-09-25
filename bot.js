@@ -4,6 +4,9 @@ var db = require('./db.js');
 
 var client;
 var opts;
+var scrollbackMode = false;
+var roomsNeedScrollback = [];
+
 function start(_opts, callback) {
     opts = _opts;
     client = sdk.createClient({
@@ -40,10 +43,12 @@ function setupListeners() {
     client.on("Room.timeline", function(event, room, toStartOfTimeline) {
         
         if (opts.recording) { db.saveEvent(event.event); }
+        if (scrollbackMode) { roomsNeedScrollback[event.event.room_id] = true; }
 
         if (event.getType() !== "m.room.message") {
           return; // only use messages
         }
+
         if (event.event.room_id === config.testRoomId && event.event.content.body[0] === '!') {
             var content = {
                 "body": event.event.content.body.substring(1),
@@ -91,9 +96,38 @@ function joinRoom(roomId, callback) {
     });
 }
 
+function fullScrollback() {
+    scrollbackMode = true;
+    roomsNeedScrollback = {};
+    setTimeout(() => { scrollbackMode = false; }, 1000 * 60 * 5);
+    doScrollback(Object.keys(client.store.rooms));
+}
+
+function doScrollback(rooms) {
+    if (! scrollbackMode) { return; }
+    console.log("doScrollback():");
+    console.log(rooms);
+    rooms.forEach(roomId => {
+        roomsNeedScrollback[roomId] = false;
+        client.scrollback(client.store.rooms[roomId], 100).done(function(room) {
+            console.log("scrolled back in " + roomId);
+        });
+    });
+    setTimeout(() => {
+        var rooms = [];
+        Object.keys(roomsNeedScrollback).forEach(roomId => {
+            if (roomsNeedScrollback[roomId]) {
+                rooms.push(roomId);
+            }
+        });
+        doScrollback(rooms);
+    }, 1000 * 30);
+}
+
 module.exports = {
     start: start,
     getClient: (() => { return client; }),
     publicRooms: publicRooms,
-    joinRoom: joinRoom
+    joinRoom: joinRoom,
+    fullScrollback: fullScrollback
 };

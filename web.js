@@ -44,6 +44,11 @@ function start(bot) {
             res.send("Join requested: " + req.params.roomId);
         });
     });
+
+    app.get('/fullScrollback', function(req, res) {
+        bot.fullScrollback();
+        res.send("fullScrollback init");
+    });
     
     app.listen(1416, function () {  
         console.log('Example app listening on port 3000!');  
