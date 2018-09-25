@@ -38,6 +38,12 @@ function start(bot) {
     app.get('/publicRooms', function(req, res) {
         bot.publicRooms((data) => { res.send(data); });
     });
+
+    app.get('/join/:roomId', function (req, res) {
+        bot.joinRoom(req.params.roomId, function() {
+            res.send("Join requested: " + req.params.roomId);
+        });
+    });
     
     app.listen(1416, function () {  
         console.log('Example app listening on port 3000!');  

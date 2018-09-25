@@ -85,8 +85,15 @@ function publicRooms(callback) {
     });
 }
 
+function joinRoom(roomId, callback) {
+    client.joinRoom(roomId).done(function() {
+        callback();
+    });
+}
+
 module.exports = {
     start: start,
     getClient: (() => { return client; }),
-    publicRooms: publicRooms
+    publicRooms: publicRooms,
+    joinRoom: joinRoom
 };
