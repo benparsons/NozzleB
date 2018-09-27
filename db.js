@@ -31,7 +31,7 @@ function saveRoom(room) {
     if (room.topic) {
         room.topic = room.topic.replace(/\'/g, "''");
     } else {
-        room.name = '';
+        room.topic = '';
     }
     if (room.name) {
         room.name = room.name.replace(/\'/g, "''");

@@ -64,6 +64,14 @@ function setupListeners() {
 function trySaveAll() {
     if (! opts.recording) { return; }
     Object.keys(client.store.rooms).forEach((roomId) => {
+        var room = client.store.rooms[roomId];
+        var roomObj = {
+            room_id: roomId,
+            name: room.name,
+            canonical_alias: room.getCanonicalAlias(),
+            guest_can_join: -1, world_readable: -1, num_joined_members: -1, topic: ""
+        };
+        db.saveRoom(roomObj);
         client.store.rooms[roomId].timeline.forEach(t => {
             db.saveEvent(t.event);
         });
