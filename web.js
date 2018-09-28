@@ -1,6 +1,13 @@
 var express = require('express');  
 var app = express();
 
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+  });
+  
+
 function start(bot) {
     var client = bot.getClient();
     app.get('/', function(req, res) {
@@ -31,7 +38,7 @@ function start(bot) {
     });
     
     app.get('/scrollback/:roomId', function(req, res) {
-        roomScrollback(req.params.roomId, 100)
+        bot.roomScrollback(req.params.roomId, 100)
         res.send("Scrollback requested");
     });
 
@@ -49,9 +56,19 @@ function start(bot) {
         bot.fullScrollback();
         res.send("fullScrollback init");
     });
+
+    app.get('/history/:eventId/:eventCount', function(req, res) {
+        bot.getLocalHistory(req.params.eventId, req.params.eventCount, function(events) {
+            res.send(events.map(event => {
+                return {
+                    line: event.content_body.replace(/\[([^\]]+)\][^\)]+\)/g, '$1'),
+                    part: event.sender
+                }}));
+        });
+    });
     
     app.listen(1416, function () {  
-        console.log('Example app listening on port 3000!');  
+        console.log('Example app listening on port 1416!');  
     });
 }
 

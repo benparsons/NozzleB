@@ -104,6 +104,14 @@ function joinRoom(roomId, callback) {
     });
 }
 
+function roomScrollback(roomId, count) {
+    client.scrollback(client.store.rooms[roomId], count).done(function(room) {
+        console.log("scrolled back in " + roomId);
+    }, function(err) {
+        print("Error: %s", err);
+    });
+}
+
 function fullScrollback() {
     scrollbackMode = true;
     roomsNeedScrollback = {};
@@ -132,10 +140,16 @@ function doScrollback(rooms) {
     }, 1000 * 30);
 }
 
+function getLocalHistory(eventId, count, callback) {
+    db.getLocalHistory(eventId, count, callback);
+}
+
 module.exports = {
     start: start,
     getClient: (() => { return client; }),
     publicRooms: publicRooms,
     joinRoom: joinRoom,
-    fullScrollback: fullScrollback
+    fullScrollback: fullScrollback,
+    roomScrollback: roomScrollback,
+    getLocalHistory: getLocalHistory
 };

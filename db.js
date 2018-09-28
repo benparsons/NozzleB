@@ -91,7 +91,24 @@ function saveMember(room_id, member) {
     });
 }
 
+function getLocalHistory(eventId, count, callback) {
+    var selectSql = `
+        SELECT * 
+        FROM events 
+        WHERE
+        room_id = (SELECT room_id FROM events where event_id = '${eventId}')
+        AND
+        origin_server_ts >= (SELECT origin_server_ts FROM events where event_id = '${eventId}')
+        ORDER BY origin_server_ts
+        LIMIT ${count}`;
+
+    db.all(selectSql, function(err, rows) {
+        callback(rows);
+    });
+}
+
 module.exports.saveEvent = saveEvent;
 module.exports.saveRoom = saveRoom;
 module.exports.saveAlias = saveAlias;
 module.exports.saveMember = saveMember;
+module.exports.getLocalHistory = getLocalHistory;
