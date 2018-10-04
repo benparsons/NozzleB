@@ -49,7 +49,7 @@ function setupListeners() {
           return; // only use messages
         }
 
-        if (event.event.room_id === config.testRoomId && event.event.content.body[0] === '!') {
+        if (event.getRoomId() === config.testRoomId && event.getContent().body[0] === '!') {
             var content = {
                 "body": event.event.content.body.substring(1),
                 "msgtype": "m.notice"
@@ -63,21 +63,20 @@ function setupListeners() {
 
 function trySaveAll() {
     if (! opts.recording) { return; }
-    Object.keys(client.store.rooms).forEach((roomId) => {
-        var room = client.store.rooms[roomId];
+    client.getRooms().forEach((room) => {
         var roomObj = {
-            room_id: roomId,
+            room_id: room.roomId,
             name: room.name,
             canonical_alias: room.getCanonicalAlias(),
             guest_can_join: -1, world_readable: -1, num_joined_members: -1, topic: ""
         };
         db.saveRoom(roomObj);
-        client.store.rooms[roomId].timeline.forEach(t => {
+        room.timeline.forEach(t => {
             db.saveEvent(t.event);
         });
-        var members = client.store.rooms[roomId].getJoinedMembers();
+        var members = room.getJoinedMembers();
         members.forEach(member => {
-            db.saveMember(roomId, member);
+            db.saveMember(room.roomId, member);
         });
     });
 }
