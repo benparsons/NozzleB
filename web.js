@@ -66,6 +66,16 @@ function start(bot) {
                 }}));
         });
     });
+
+    app.get('/fetch/:roomId/:eventId', function(req, res) {
+        client.fetchRoomEvent(req.params.roomId, req.params.eventId).then((event) => {
+            
+            res.send(event);
+            // message sent successfully
+         }).catch((err) => {
+             console.log(err);
+         });
+    });
     
     app.listen(1416, function () {  
         console.log('Example app listening on port 1416!');  
