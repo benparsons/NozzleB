@@ -57,8 +57,18 @@ function start(bot) {
         res.send("fullScrollback init");
     });
 
-    app.get('/history/:eventId/:eventCount', function(req, res) {
-        bot.getLocalHistory(req.params.eventId, req.params.eventCount, function(events) {
+    app.get('/history/:roomId/:eventId/:eventCount', function(req, res) {
+        var roomId = req.params.roomId;
+        if (roomId[0] !== '!') {
+            try {
+                roomId = await client.resolveRoomAlias('#' + roomId).room_id;
+            }
+            catch (error) {
+                throw new Error();
+            }
+        }
+
+        bot.getLocalHistory(roomId, req.params.eventId, req.params.eventCount, function(events) {
             res.send(events.map(event => {
                 return {
                     line: event.content_body.replace(/\[([^\]]+)\][^\)]+\)/g, '$1'),

@@ -91,12 +91,12 @@ function saveMember(room_id, member) {
     });
 }
 
-function getLocalHistory(eventId, count, callback) {
+function getLocalHistory(roomId, eventId, count, callback) {
     var selectSql = `
         SELECT * 
         FROM events 
         WHERE
-        room_id = (SELECT room_id FROM events where event_id = '${eventId}')
+        room_id = '${roomId}'
         AND
         origin_server_ts >= (SELECT origin_server_ts FROM events where event_id = '${eventId}')
         ORDER BY origin_server_ts
