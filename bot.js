@@ -12,7 +12,8 @@ function start(_opts, callback) {
     client = sdk.createClient({
         baseUrl: "https://matrix.org",
         accessToken: config.access_token,
-        userId: config.username
+        userId: config.username,
+        timelineSupport: true
     });
     
     try {
@@ -124,7 +125,7 @@ function doScrollback(rooms) {
     console.log(rooms);
     rooms.forEach(roomId => {
         roomsNeedScrollback[roomId] = false;
-        client.scrollback(client.store.rooms[roomId], 100).done(function(room) {
+        client.scrollback(client.getRoom(roomId), 100).done(function(room) {
             console.log("scrolled back in " + roomId);
         });
     });
@@ -143,6 +144,17 @@ function getLocalHistory(eventId, count, callback) {
     db.getLocalHistory(eventId, count, callback);
 }
 
+function getContext(room, eventId) {
+    var timelineSet = room.getTimelineSets()[0];
+    var timelineWindow = new sdk.TimelineWindow(
+        client, timelineSet);
+    
+    timelineWindow.load(eventId, 1000);
+    console.log(timelineWindow.getEvents());
+    timelineWindow.paginate('f', 100);
+    setTimeout(() => { console.log(timelineWindow.getEvents());}, 10 * 1000);
+}
+
 module.exports = {
     start: start,
     getClient: (() => { return client; }),
@@ -150,5 +162,6 @@ module.exports = {
     joinRoom: joinRoom,
     fullScrollback: fullScrollback,
     roomScrollback: roomScrollback,
-    getLocalHistory: getLocalHistory
+    getLocalHistory: getLocalHistory,
+    getContext: getContext
 };
