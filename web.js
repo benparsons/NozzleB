@@ -78,29 +78,16 @@ function start(bot) {
     });
 
     app.get('/context/:roomId/:eventId', async function(req, res) {
-        var room = '';
-        var roomId = '';
-        if (req.params.roomId[0] !== '!') {
+        var roomId = req.params.roomId;
+        if (roomId[0] !== '!') {
             try {
-                room = await client.resolveRoomAlias('#' + req.params.roomId);
-                roomId = room.room_id;
-                room = client.getRoom(room.room_id);
+                roomId = await client.resolveRoomAlias('#' + roomId).room_id;
             }
             catch (error) {
                 throw new Error();
             }
-        } else {
-            roomId = req.params.roomId;
-            room = client.getRoom(req.params.roomId);
         }
-        
-        if (!room) {
-            client.joinRoom(roomId).done(function(room) {
-                bot.getContext(room, req.params.eventId);
-            });
-        } else {
-            bot.getContext(room, req.params.eventId);
-        }        
+        bot.getContext(roomId, req.params.eventId);
     });
     
     app.listen(1416, function () {  

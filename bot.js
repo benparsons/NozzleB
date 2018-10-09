@@ -18,7 +18,15 @@ function start(_opts, callback) {
     
     try {
         console.log("start client");
-        client.startClient({initialSyncLimit: 10});
+        var roomFilter = {
+            "timeline":{"limit":2},
+            "state": {"not_types": ["*"]},
+        };
+        var filter = {"room":roomFilter, account_data:{not_types:['*']}};
+        client.startClient({
+            initialSyncLimit: 10,
+            filter: sdk.Filter.fromJson("@NozzleB:matrix.org", "filter1", filter)
+        });
     } catch(err) {
         console.log('WARNING: Caught matrixClient error:');
         console.log(err);
@@ -35,7 +43,7 @@ function start(_opts, callback) {
         } else {
             console.log(res);
             console.log(state);
-            process.exit(1);
+            //process.exit(1);
         }
     });
 }
@@ -144,15 +152,29 @@ function getLocalHistory(eventId, count, callback) {
     db.getLocalHistory(eventId, count, callback);
 }
 
-function getContext(room, eventId) {
+function getContext(roomId, eventId) {
+    var room = client.getRoom(roomId);
+        
+    if (!room) {
+        client.joinRoom(roomId).done(function(room) {
+            getContextQuery(room, eventId);
+        });
+    } else {
+        getContextQuery(room, eventId);
+    }
+}
+
+function getContextQuery(room, eventId) {
     var timelineSet = room.getTimelineSets()[0];
     var timelineWindow = new sdk.TimelineWindow(
         client, timelineSet);
     
     timelineWindow.load(eventId, 1000);
     console.log(timelineWindow.getEvents());
-    timelineWindow.paginate('f', 100);
-    setTimeout(() => { console.log(timelineWindow.getEvents());}, 10 * 1000);
+    if (timelineWindow.canPaginate('f')) {
+        timelineWindow.paginate('f', 500, true, 20);
+        setTimeout(() => { console.log(timelineWindow.getEvents());}, 10 * 1000);
+    }
 }
 
 module.exports = {
