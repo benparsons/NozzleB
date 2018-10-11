@@ -1,3 +1,4 @@
 node_modules/
 config.json
 nozzleb.db
+.DS_Store
