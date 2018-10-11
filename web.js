@@ -57,14 +57,18 @@ function start(bot) {
         res.send("fullScrollback init");
     });
 
-    app.get('/history/:roomId/:eventId/:eventCount', function(req, res) {
+    app.get('/history/:roomId/:eventId/:eventCount', async function(req, res) {
         var roomId = req.params.roomId;
         if (roomId[0] !== '!') {
             try {
-                roomId = await client.resolveRoomAlias('#' + roomId).room_id;
+                if (roomId[0] !== '#') { roomId =  '#' + roomId; }
+                var room = await client.resolveRoomAlias(roomId)
+                roomId = room.room_id;
             }
             catch (error) {
-                throw new Error();
+                Promise.reject(error.errcode);
+                res.send(error.errcode);
+                return;
             }
         }
 
@@ -91,13 +95,21 @@ function start(bot) {
         var roomId = req.params.roomId;
         if (roomId[0] !== '!') {
             try {
-                roomId = await client.resolveRoomAlias('#' + roomId).room_id;
+                if (roomId[0] !== '#') { roomId =  '#' + roomId; }
+                var room = await client.resolveRoomAlias(roomId)
+                roomId = room.room_id;
             }
             catch (error) {
                 throw new Error();
             }
         }
-        bot.getContext(roomId, req.params.eventId);
+        bot.getContext(roomId, req.params.eventId, function(err, paginated) {
+            if (err) {
+                res.send(err.stack);
+            } else {
+                res.send(paginated);
+            }
+        });
     });
     
     app.listen(1416, function () {  

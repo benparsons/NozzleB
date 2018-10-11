@@ -148,33 +148,43 @@ function doScrollback(rooms) {
     }, 1000 * 30);
 }
 
-function getLocalHistory(eventId, count, callback) {
-    db.getLocalHistory(eventId, count, callback);
+function getLocalHistory(roomId, eventId, count, callback) {
+    db.getLocalHistory(roomId, eventId, count, callback);
 }
 
-function getContext(roomId, eventId) {
+function getContext(roomId, eventId, callback) {
     var room = client.getRoom(roomId);
+
+    if (room) console.log(room.getMyMembership());
         
-    if (!room) {
+    if (!room || room.getMyMembership() !== "join") {
         client.joinRoom(roomId).done(function(room) {
-            getContextQuery(room, eventId);
+            getContextQuery(room, eventId, callback);
         });
     } else {
-        getContextQuery(room, eventId);
+        getContextQuery(room, eventId, callback);
     }
 }
 
-function getContextQuery(room, eventId) {
+function getContextQuery(room, eventId, callback) {
     var timelineSet = room.getTimelineSets()[0];
-    var timelineWindow = new sdk.TimelineWindow(
-        client, timelineSet);
+    var timelineWindow = new sdk.TimelineWindow(client, timelineSet);
     
-    timelineWindow.load(eventId, 1000);
-    console.log(timelineWindow.getEvents());
-    if (timelineWindow.canPaginate('f')) {
-        timelineWindow.paginate('f', 500, true, 20);
-        setTimeout(() => { console.log(timelineWindow.getEvents());}, 10 * 1000);
-    }
+    timelineWindow.load(eventId, 1000)
+    .done(()=>{
+        console.log(timelineWindow.getEvents());
+        if (timelineWindow.canPaginate('f')) {
+            timelineWindow.paginate('f', 500, true, 20)
+                .done(function(paginated) {
+                    callback(null, paginated);
+                }, function(err) {
+                    callback(err);
+                });
+            setTimeout(() => { console.log(timelineWindow.getEvents());}, 10 * 1000);
+        }
+    }, (err) => {
+        callback(err);
+    });
 }
 
 module.exports = {
