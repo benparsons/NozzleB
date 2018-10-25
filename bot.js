@@ -123,7 +123,8 @@ function roomScrollback(roomId, count) {
 function fullScrollback() {
     scrollbackMode = true;
     roomsNeedScrollback = {};
-    setTimeout(() => { scrollbackMode = false; }, 1000 * 60 * 5);
+    var fullScrollbackMinutes = 60;
+    setTimeout(() => { scrollbackMode = false; }, 1000 * 60 * fullScrollbackMinutes);
     doScrollback(Object.keys(client.store.rooms));
 }
 
@@ -133,8 +134,9 @@ function doScrollback(rooms) {
     console.log(rooms);
     rooms.forEach(roomId => {
         roomsNeedScrollback[roomId] = false;
-        client.scrollback(client.getRoom(roomId), 100).done(function(room) {
-            console.log("scrolled back in " + roomId);
+        var room = client.getRoom(roomId);
+        client.scrollback(room, 100).done(function(room) {
+            console.log(`scrolled back in ${roomId} (${room.name})`);
         });
     });
     setTimeout(() => {
@@ -154,11 +156,11 @@ function getLocalHistory(roomId, eventId, count, callback) {
 
 function getContext(roomId, eventId, callback) {
     var room = client.getRoom(roomId);
-
-    if (room) console.log(room.getMyMembership());
         
     if (!room || room.getMyMembership() !== "join") {
+        console.log(`Not currently joined to ${roomId}, joining`);
         client.joinRoom(roomId).done(function(room) {
+            console.log(`Successfully joined to ${roomId}`);
             getContextQuery(room, eventId, callback);
         });
     } else {
@@ -167,23 +169,25 @@ function getContext(roomId, eventId, callback) {
 }
 
 function getContextQuery(room, eventId, callback) {
+    console.log(`Context Query for: ${room.roomId}/${eventId}`)
     var timelineSet = room.getTimelineSets()[0];
     var timelineWindow = new sdk.TimelineWindow(client, timelineSet);
     
     timelineWindow.load(eventId, 1000)
     .done(()=>{
-        console.log(timelineWindow.getEvents());
+        console.log(`TimelineWindow loaded for: ${room.roomId}/${eventId} (now ${timelineWindow.getEvents().length} events)`);
         if (timelineWindow.canPaginate('f')) {
             timelineWindow.paginate('f', 500, true, 20)
                 .done(function(paginated) {
+                    console.log(`TimelineWindow paginated for: ${room.roomId}/${eventId} (now ${timelineWindow.getEvents().length} events)`);
                     callback(null, paginated);
                 }, function(err) {
+                    console.log(`TimelineWindow.paginate error: ${JSON.stringify(error)}`);
                     callback(err);
                 });
-            setTimeout(() => { console.log(timelineWindow.getEvents());}, 10 * 1000);
         }
     }, (err) => {
-        callback(err);
+        console.log(`TimelineWindow.load error: ${JSON.stringify(error)}`);
     });
 }
 

@@ -105,9 +105,9 @@ function start(bot) {
         }
         bot.getContext(roomId, req.params.eventId, function(err, paginated) {
             if (err) {
-                res.send(err.stack);
+                res.send({success:false, error: err.stack});
             } else {
-                res.send(paginated);
+                res.send({success:true, paginated: paginated});
             }
         });
     });
